@@ -30,17 +30,17 @@ class ViewController: UIViewController {
         }.disposed(by: bag)
         
         tableView.rx.contentOffset
-            .skip(while: { [weak self] _ in
-                    self?.viewModel?.isLock ?? false })
+            .skip(while: { _ in
+                    viewModel.isLock })
             .filter { return $0.y < self.tableView.contentSize.height - self.tableView.frame.height - 100 }
-            .subscribe(onNext: { [weak self] _ in
-                self?.viewModel?.isLock = false
+            .subscribe(onNext: { _ in
+                viewModel.isLock = false
             })
             .disposed(by: bag)
         
         tableView.rx.contentOffset
-            .skip(while: { [weak self] _ in
-                    self?.viewModel?.isLock ?? false })
+            .skip(while: { _ in
+                    viewModel.isLock })
             .map { return $0.y >= self.tableView.contentSize.height - self.tableView.frame.height - 100 }
             .bind(to: viewModel.loadNewPost)
             .disposed(by: bag)
