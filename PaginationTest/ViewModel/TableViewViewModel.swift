@@ -24,8 +24,9 @@ class TableViewViewModel {
         
         let newPosts = api.getCharacters(limit: 100, offset: characters.value.count)
         var newArray = [String]()
-        newPosts.subscribe(onNext: {
-            guard let res = $0.results else { return }
+        newPosts.subscribe(onNext: { [weak self] in
+            guard let res = $0.results,
+                  let self = self else { return }
             for item in res {
                 guard let name = item["name"] as? String else { return }
                 newArray.append(name)
@@ -43,7 +44,6 @@ class TableViewViewModel {
             .filter { $0 }
             .subscribe(onNext: { [weak self] _ in
                 self?.loadNewData()
-                
             }).disposed(by: disposeBag)
     }
     
