@@ -17,7 +17,6 @@ class TableViewViewModel {
     var loadNewPost = BehaviorRelay<Bool>(value: false)
     
     func loadNewData() {
-        print("Called \(isLocked)")
         guard !isLocked else { return }
         
         self.isLocked = true
