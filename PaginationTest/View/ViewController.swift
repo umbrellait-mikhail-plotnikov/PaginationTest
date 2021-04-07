@@ -32,17 +32,21 @@ class ViewController: UIViewController {
         
         viewModel.loadNewPost
             .distinctUntilChanged()
-            .subscribe(onNext: {
-                $0 ? self.spinner.startAnimating() : self.spinner.stopAnimating()
+            .subscribe(onNext: { [weak self] in
+                self?.tableView.tableFooterView?.isHidden = !$0
             })
             .disposed(by: bag)
         
         tableView.rx.contentOffset
             .skip(while: { _ in
                     viewModel.isLocked })
-            .map { return $0.y >= self.tableView.contentSize.height - self.tableView.frame.height - 150 }
+            .map { [weak self] in
+                guard let self = self else { return false }
+                return $0.y >= self.tableView.contentSize.height - self.tableView.frame.height - 150 }
             .distinctUntilChanged()
-            .bind(to: viewModel.loadNewPost)
+            .subscribe(onNext: { [weak self] in
+                self?.viewModel?.loadNewPost.accept($0)
+            })
             .disposed(by: bag)
         
     }
@@ -50,8 +54,9 @@ class ViewController: UIViewController {
     private func createUpdateViews() {
         spinner.color = .darkGray
         spinner.hidesWhenStopped = true
+        spinner.startAnimating()
         tableView.tableFooterView = spinner
-        self.tableView.tableFooterView?.isHidden = false
+        tableView.tableFooterView?.isHidden = false
         
         refreshControl.attributedTitle = NSAttributedString(string: "Update...")
         refreshControl.addTarget(self, action: #selector(refresh), for: .valueChanged)
@@ -71,10 +76,11 @@ class ViewController: UIViewController {
     }
     
     @objc private func refresh(sender: AnyObject) {
-        DispatchQueue.global().async {
-            sleep(1)
-            DispatchQueue.main.async {
-                self.refreshControl.endRefreshing()
+        DispatchQueue.global().async { [weak self] in
+            self?.viewModel?.pullToRefresh() {
+                DispatchQueue.main.async {
+                    self?.refreshControl.endRefreshing()
+                }
             }
         }
     }
