@@ -65,7 +65,7 @@ final class APIProvider: APIProviderProtocol {
             URLQueryItem(name: "offset", value: String(offset))
         ])
         
-        guard let marvelURL = try? marvelURLComponents.asURL() else {fatalError("Wrong components")}
+        guard let marvelURL = try? marvelURLComponents.asURL() else { fatalError("Wrong components") }
         
         return request(.get, marvelURL)
             .debug()

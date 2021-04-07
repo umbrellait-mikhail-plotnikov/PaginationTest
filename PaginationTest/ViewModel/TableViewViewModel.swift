@@ -8,25 +8,30 @@ import RxCocoa
 import RxSwift
 import Foundation
 
-class ViewModel {
-    let character = BehaviorRelay<[String]>(value: [])
+class TableViewViewModel {
+    let characters = BehaviorRelay<[String]>(value: [])
     let api: APIProviderProtocol
     let disposeBag = DisposeBag()
     
-    var isLock = false
+    var isLocked = false
     var loadNewPost = BehaviorRelay<Bool>(value: false)
     
     func loadNewData() {
-        self.isLock = true
-        let newPosts = api.getCharacters(limit: 100, offset: character.value.count)
+        print("Called \(isLocked)")
+        guard !isLocked else { return }
+        
+        self.isLocked = true
+        
+        let newPosts = api.getCharacters(limit: 100, offset: characters.value.count)
         var newArray = [String]()
         newPosts.subscribe(onNext: {
-            guard let res = $0.results else { fatalError() }
+            guard let res = $0.results else { return }
             for item in res {
-                guard let name = item["name"] as? String else { fatalError() }
+                guard let name = item["name"] as? String else { return }
                 newArray.append(name)
             }
-            self.character.accept(self.character.value + newArray)
+            self.characters.accept(self.characters.value + newArray)
+            self.isLocked = false
         })
         .disposed(by: disposeBag)
         print("CALL")
@@ -35,7 +40,7 @@ class ViewModel {
     init(APIProvider: APIProviderProtocol) {
         self.api = APIProvider
         loadNewPost
-            .filter { $0 == true && !self.isLock }
+            .filter { $0 }
             .subscribe(onNext: { [weak self] _ in
                 self?.loadNewData()
                 
